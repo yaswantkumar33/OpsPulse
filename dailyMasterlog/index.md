@@ -1,4 +1,4 @@
-# SupportService Master Progress Log & Daily Activity
+# OpsPulse Master Progress Log & Daily Activity
 
 **Project:** Support Service (Modular Monolith)  
 **Tech Stack:** Node.js, Express, TypeScript, PostgreSQL (`dev_support_db`), Drizzle ORM, Zod
