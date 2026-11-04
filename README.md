@@ -1,4 +1,5 @@
-<img width="1024" height="338" alt="image" src="https://github.com/user-attachments/assets/009bd164-7523-4999-935a-9dc37c7ecbc9" />
+<img width="1024" height="338" alt="image" src="https://github.com/user-attachments/assets/80a4cda6-62f8-474f-9499-8d6ab1e68b97" />
+
 
 # SupportService API
 
