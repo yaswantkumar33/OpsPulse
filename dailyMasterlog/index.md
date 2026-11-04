@@ -149,6 +149,7 @@
   - Added upload (`POST /api/tickets/:id/attachments`) and listing (`GET /api/tickets/:id/attachments`) routes with role-based scoping.
 
 ## 12. Integration Testing & Jest/Supertest Infrastructure (Nov 02, 2026)
+
 - **App Decoupling Refactor (`src/app.ts` & `src/index.ts`):**
   - Separated Express routing and middleware pipeline into `src/app.ts` to allow in-memory HTTP assertions without binding live network ports.
 - **Testing Setup (`jest.config.ts` & `tsconfig.json`):**
@@ -156,3 +157,11 @@
   - Added Jest types globally to TypeScript config.
 - **Auth Module Integration Tests (`tests/auth.test.ts`):**
   - Built automated integration test cases verifying `POST /api/auth/login` status codes (`400`, `401`) and standard JSON error response structures.
+
+## 13. Auth & Ticket Integration Suite Expansion (Nov 04, 2026)
+
+- **Auth Validation & Token Issuance (`tests/auth.test.ts`):**
+  - Completed test assertions for JWT issuance on valid login and Zod payload validation failures on registration.
+- **Ticket Endpoint Guards & Creation (`tests/tickets.test.ts`):**
+  - Implemented initial integration suite covering auth header guards (401), ticket creation (201 Created), and ticket collection retrieval (200 OK).
+  - Verified total passing integration test suite (2 suites, 7 tests).

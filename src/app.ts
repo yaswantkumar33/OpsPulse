@@ -1,8 +1,8 @@
 import express from "express";
 import healthRouter from "./modules/health/health.router";
+import authRouter from "./modules/auth/auth.router";
 import userRouter from "./modules/users/users.router";
 import ticketRouter from "./modules/tickets/tickets.router";
-import authRouter from "./modules/auth/auth.router";
 import { errorHandeler } from "./shared/middlewares/error.middleware";
 
 const app = express();
