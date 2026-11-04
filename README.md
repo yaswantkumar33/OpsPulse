@@ -52,6 +52,7 @@ A production-grade, modular monolith RESTful backend for ticket and customer sup
 │   └── tickets.test.ts     # Ticket lifecycle & authorization tests
 ```
 
+
 ## Architectural Decoupling & Testing Strategy
 
 - To maintain production-grade standards and eliminate port collisions during test runs, the application decouples initialization from network listener execution:
@@ -67,31 +68,29 @@ src/index.ts: Imports app and binds to env.PORT for live deployment and local de
 - Integration tests use Supertest to execute HTTP requests against app.ts in-memory while running assertions via Jest.
 
 ##### Execute integration test suite serially
-
 ```code
 npm test
 ```
-
 #### Test Suite Coverage
 
 - Auth Module (tests/auth.test.ts):
-  - POST /api/auth/login (Missing credentials validation 400, non-existent user 401, valid JWT issuance 200)
-  - POST /api/auth/register (Zod schema validation bounds 400)
-
+   - POST /api/auth/login (Missing credentials validation 400, non-existent user 401, valid JWT issuance 200)
+   - POST /api/auth/register (Zod schema validation bounds 400)
+     
 - Ticket Module (tests/tickets.test.ts):
-  - POST /api/tickets (Unauthenticated request protection 401, customer creation 201)
-  - GET /api/tickets (Authenticated ticket listing 200)
-
+   - POST /api/tickets (Unauthenticated request protection 401, customer creation 201)
+   - GET /api/tickets (Authenticated ticket listing 200)
+ 
 ## Getting Started
+ 
+ 1. Prerequisites
 
-1. Prerequisites
-
-   - Node.js (v18+)
-   - PostgreSQL installed locally or via Docker
-   - npm or pnpm
+    - Node.js (v18+)
+    - PostgreSQL installed locally or via Docker
+    - npm or pnpm
 
 2. Environment Setup
-
+    
    ##### Create a .env file in the root directory:
 
    ```code
@@ -107,43 +106,42 @@ npm test
    ```code
     # Install dependencies
     npm install
-
+    
     # Push schema to PostgreSQL database
     npx drizzle-kit push
-
+    
     # Start development server
     npm run dev
-
+    
     # Run automated integration tests
     npm test
    ```
-
 ## API Documentation Overview
 
-#### Authentication
+  #### Authentication
 
-```code
-  POST /api/auth/register - Create a new user account
-  POST /api/auth/login    - Authenticate and receive a Bearer JWT token
-```
+  ```code
+    POST /api/auth/register - Create a new user account
+    POST /api/auth/login    - Authenticate and receive a Bearer JWT token
+ ```
 
-#### Tickets
+ #### Tickets
 
-```code
-   POST /api/tickets       - Create a new support ticket (customer)
-   GET /api/tickets        - Fetch paginated tickets (Scoped by ownership for customer; All for agent/admin)
-   GET /api/tickets/:id    - Fetch single ticket details (Ownership validated)
-   PATCH /api/tickets/:id  - Update status/assignment (agent, admin - follows state transition rules)
-```
+ ```code
+    POST /api/tickets       - Create a new support ticket (customer)
+    GET /api/tickets        - Fetch paginated tickets (Scoped by ownership for customer; All for agent/admin)
+    GET /api/tickets/:id    - Fetch single ticket details (Ownership validated)
+    PATCH /api/tickets/:id  - Update status/assignment (agent, admin - follows state transition rules)
+ ```
 
-#### Ticket Comments
+ #### Ticket Comments
 
-```code
-   POST /api/tickets/:id/comments - Add a comment to a ticket (Ticket owner, assigned agent, or admin only)
-```
+ ```code
+    POST /api/tickets/:id/comments - Add a comment to a ticket (Ticket owner, assigned agent, or admin only)
+ ```
 
-#### Security Highlights
-
-- Anti-Identity Spoofing: customerId and authorId are stripped from client request bodies and injected directly from verified JWT claims (req.user.userId).
-- Forbidden Route Guards: Middleware blocks unauthorized roles with standard 403 Forbidden responses prior to execution.
-- Parameterized Queries: All dynamic filters utilize Drizzle's SQL expression trees to prevent SQL injection.
+ #### Security Highlights
+ 
+  - Anti-Identity Spoofing: customerId and authorId are stripped from client request bodies and injected directly from verified JWT claims (req.user.userId).
+  - Forbidden Route Guards: Middleware blocks unauthorized roles with standard 403 Forbidden responses prior to execution.
+  - Parameterized Queries: All dynamic filters utilize Drizzle's SQL expression trees to prevent SQL injection.
