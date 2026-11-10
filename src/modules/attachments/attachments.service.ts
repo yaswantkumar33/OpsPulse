@@ -32,8 +32,6 @@ export const createAttachment = async ({ ticketId, uploadedById, file, userRole 
         fileSize: file.size
     }).returning()
 
-    console.log("insert happened");
-
     return attachement;
 }
 

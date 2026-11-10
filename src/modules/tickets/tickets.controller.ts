@@ -47,7 +47,6 @@ export const getTicketByIdHandeler = async (req: Request<{ id: string }>, res: R
     const { id } = req.params;
 
     const ticket = await ticketService.getTicketById(id, req.user!);
-    console.log(ticket);
 
     res.status(200).json({
       success: true,

@@ -165,3 +165,13 @@
 - **Ticket Endpoint Guards & Creation (`tests/tickets.test.ts`):**
   - Implemented initial integration suite covering auth header guards (401), ticket creation (201 Created), and ticket collection retrieval (200 OK).
   - Verified total passing integration test suite (2 suites, 7 tests).
+
+## 14. Tickets & Attachments Integration Test Suite (Nov 10, 2026)
+
+- **Multer Upload Route & Schema Fix (`tests/tickets.test.ts`):**
+  - Corrected test route to `POST /api/tickets/:id/attachments` and aligned field key to `'file'`, resolving `ECONNRESET` and `MulterError` socket drops.
+  - Verified end-to-end file upload stream pipeline using physical disk fixture `tests/fixtures/sample.txt`.
+- **Pagination & Query Filtering Assertions (`tests/tickets.test.ts`):**
+  - Implemented metadata checks (`currentPage`, `limit`) for paginated ticket list requests.
+  - Asserted multi-field search parameters (`status` and `priority`) returning array responses.
+  - Verified total passing integration test suite (2 suites, 13 tests passed).
