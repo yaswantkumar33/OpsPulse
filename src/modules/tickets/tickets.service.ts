@@ -172,6 +172,6 @@ export const getTicketById = async (ticketId: string, user: { userId: string, us
 
   if (!ticket) throw new AppErr("Ticket Not Found!", 404);
 
-  if (user.userRole === 'customer' && ticket.customerId !== user.userId) throw new AppErr("Forbidden: You do not have access to this ticket!")
+  if (user.userRole === 'customer' && ticket.customerId !== user.userId) throw new AppErr("Forbidden: You do not have access to this ticket!", 403)
   return ticket;
 }

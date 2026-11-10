@@ -1,0 +1,1 @@
+Dummy attachment content for OpsPulse ticket integration tests.
