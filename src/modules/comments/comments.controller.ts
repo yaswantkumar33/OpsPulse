@@ -1,34 +1,29 @@
 import { Request, Response, NextFunction } from "express";
-import { createCommentSchema } from "./comments.schema";
+import { commentTicketParamSchema, createCommentSchema } from "./comments.schema";
 import * as commentService from "./comments.service";
 
 
-export const createCommentHandeler = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
-
+export const createCommentHandeler = async (req: Request, res: Response, next: NextFunction) => {
 
     try {
+        const { id: ticketId } = commentTicketParamSchema.parse(req.params);
+        const { content } = createCommentSchema.parse(req.body)
 
-        const ticketId = req.params.id;
+        const comment = await commentService.addCommentToTicket(ticketId, content, req.user!);
 
-        const validatedData = createCommentSchema.parse(req.body);
-
-        const newComment = await commentService.createComment({ ticketId, authorId: req.user!.userId, userRole: req.user!.userRole, content: validatedData.content })
-
-        res.status(200).json({
-            sucess: true,
-            message: "Comment Added Successfully",
-            data: newComment
-        })
-
+        res.status(201).json({
+            success: true,
+            data: comment
+        });
     } catch (e) { next(e) }
 
 }
 
-export const getTicketCommentsHandeler = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+export const getTicketCommentsHandeler = async (req: Request, res: Response, next: NextFunction) => {
 
     try {
-        const ticketId = req.params.id;
-        const comments = await commentService.getComment(ticketId);
+        const { id: ticketId } = commentTicketParamSchema.parse(req.params);
+        const comments = await commentService.getCommentsByTicketId(ticketId, req.user!);
 
         res.status(200).json({
             sucess: true,
