@@ -50,7 +50,6 @@ export const updateTicket = async ({ ticketId, input, user }: updateTicketParams
 
   if (!ticketExists) throw new AppErr("Ticket Not Found!!", 404);
 
-
   if (input.status && input.status !== ticketExists.status) {
 
     const currentStatus = ticketExists.status;
@@ -62,6 +61,7 @@ export const updateTicket = async ({ ticketId, input, user }: updateTicketParams
   }
 
   if (user.userRole === 'agent' && ticketExists.assignedAgentId !== user.userId) throw new AppErr('Forbidden: You can only update tickets that are assigned to you', 403)
+
 
   // audit logging 
   const oldValues: Record<string, unknown> = {};
@@ -75,6 +75,21 @@ export const updateTicket = async ({ ticketId, input, user }: updateTicketParams
   }
 
   if (input.assignedAgentId && input.assignedAgentId !== ticketExists.assignedAgentId) {
+
+    const [assignee] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, input.assignedAgentId))
+      .limit(1);
+
+    if (!assignee) {
+      throw new AppErr("Assigned agent not found", 404);
+    }
+
+    if (assignee.role === "customer") {
+      throw new AppErr("Tickets can only be assigned to agents or admins", 400);
+    }
+
     action = action === 'STATUS_UPDATE' ? 'STATUS_UPDATE_AND_ASSIGNMENT_UPDATE' : 'AGENT_ASSIGNMENT';
     oldValues.assignedAgentId = ticketExists.assignedAgentId;
     newValues.assignedAgentId = input.assignedAgentId;
@@ -95,6 +110,7 @@ export const updateTicket = async ({ ticketId, input, user }: updateTicketParams
     .where(eq(tickets.id, ticketId))
     .returning();
 
+  console.log("update ticket service called 5")
 
   if (Object.keys(newValues).length > 0) {
     await createAuditLog({

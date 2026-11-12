@@ -26,7 +26,7 @@ export const getTicketCommentsHandeler = async (req: Request, res: Response, nex
         const comments = await commentService.getCommentsByTicketId(ticketId, req.user!);
 
         res.status(200).json({
-            sucess: true,
+            success: true,
             data: comments
         })
     } catch (e) { next(e) }

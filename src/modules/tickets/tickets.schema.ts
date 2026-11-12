@@ -12,7 +12,7 @@ export const updateTicketSchema = z.object({
   description: z.string().min(5).optional(),
   status: z.enum(["open", "in_progress", "resolved", "closed"]).optional(),
   priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
-  assignedAgentId: z.string().min(3).optional(),
+  assignedAgentId: z.uuid().min(3).optional(),
 });
 
 // allowed status transition 
