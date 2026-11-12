@@ -112,6 +112,46 @@ describe("Tickets Module Integration testing", () => {
         });
     });
 
+    // Ticket Assigment suite 
+    describe("PATCH /api/tickets/:id - Ticket Assigments", () => {
+
+        const getUserIdFromToken = (token: string) =>
+            JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString()).userId;
+
+        it("should allow an Admin/Agent to assign a ticket to a valid Agent/Admin (200)", async () => {
+            const adminAId = getUserIdFromToken(adminToken);
+            const res = await request
+                .patch(`/api/tickets/${ticketId}`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send({ assignedAgentId: adminAId });
+
+            expect(res.status).toBe(200);
+            expect(res.body.data.assignedAgentId).toBe(adminAId);
+        });
+
+        it("should reject assigning a ticket to a user with the customer role", async () => {
+            const customerAId = getUserIdFromToken(customerAToken);
+
+            const res = await request
+                .patch(`/api/tickets/${ticketId}`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send({ assignedAgentId: customerAId });
+
+            expect([400, 403]).toContain(res.status);
+        });
+
+        it("should return 404 when assigning a ticket to a non-existent user UUID", async () => {
+            const fakeUserId = "00000000-0000-0000-0000-000000000000";
+            const res = await request
+                .patch(`/api/tickets/${ticketId}`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send({ assignedAgentId: fakeUserId });
+
+            expect([400, 404]).toContain(res.status);
+        });
+
+    })
+
     // file upload suite 
     describe('POST /api/tickets/:id/attachments - Attachment Uploads', () => {
         it('should successfully upload an attachment to an existing ticket', async () => {
@@ -152,5 +192,82 @@ describe("Tickets Module Integration testing", () => {
             expect(Array.isArray(response.body.data)).toBe(true);
         });
     });
+
+    // comments suite 
+    describe("POST /api/tickets/:id/comments - Ticket Conversation", () => {
+
+        it("should allow Customer A to post a commnet on their own ticket (201)", async () => {
+            const res = await request
+                .post(`/api/tickets/${ticketId}/comments`)
+                .set("Authorization", `Bearer ${customerAToken}`)
+                .send({ content: "Following up on this issue with additional logs." });
+
+            expect(res.status).toBe(201);
+            expect(res.body.success).toBe(true);
+            expect(res.body.data).toHaveProperty("id");
+            expect(res.body.data.content).toBe("Following up on this issue with additional logs.");
+        })
+
+        it("should allow an Admin/Agent to reply to the ticket (201)", async () => {
+            const res = await request
+                .post(`/api/tickets/${ticketId}/comments`)
+                .set("Authorization", `Bearer ${adminToken}`)
+                .send({ content: "We are investigating this now." });
+
+            expect(res.status).toBe(201);
+            expect(res.body.success).toBe(true);
+        });
+
+        it("should return 403 Forbidden when Customer B tries to comment on Customer A's ticket", async () => {
+            const res = await request
+                .post(`/api/tickets/${ticketId}/comments`)
+                .set("Authorization", `Bearer ${customerBToken}`)
+                .send({ content: "Unauthorized comment attempt" });
+
+            expect(res.status).toBe(403);
+        });
+
+        it("should return 400 Bad Request when comment content is empty or whitespace", async () => {
+            const res = await request
+                .post(`/api/tickets/${ticketId}/comments`)
+                .set("Authorization", `Bearer ${customerAToken}`)
+                .send({ content: "   " });
+
+            expect(res.status).toBe(400);
+        });
+
+        it("should return 404 Not Found for a non-existent ticket UUID", async () => {
+            const fakeUuid = "00000000-0000-0000-0000-000000000000";
+            const res = await request
+                .post(`/api/tickets/${fakeUuid}/comments`)
+                .set("Authorization", `Bearer ${customerAToken}`)
+                .send({ content: "Comment on missing ticket" });
+
+            expect(res.status).toBe(404);
+        });
+    })
+    describe("GET /api/tickets/:id/comments - Fetch Thread", () => {
+        it("should return chronological comments with author details for Customer A (200)", async () => {
+            const res = await request
+                .get(`/api/tickets/${ticketId}/comments`)
+                .set("Authorization", `Bearer ${customerAToken}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(Array.isArray(res.body.data)).toBe(true);
+            expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+            expect(res.body.data[0]).toHaveProperty("author");
+            expect(res.body.data[0].author).toHaveProperty("name");
+        });
+
+        it("should return 403 Forbidden when Customer B tries to read Customer A's comments", async () => {
+            const res = await request
+                .get(`/api/tickets/${ticketId}/comments`)
+                .set("Authorization", `Bearer ${customerBToken}`);
+
+            expect(res.status).toBe(403);
+        });
+    });
+
 })
 

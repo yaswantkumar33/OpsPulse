@@ -175,3 +175,17 @@
   - Implemented metadata checks (`currentPage`, `limit`) for paginated ticket list requests.
   - Asserted multi-field search parameters (`status` and `priority`) returning array responses.
   - Verified total passing integration test suite (2 suites, 13 tests passed).
+
+## 15. Conversations Module, Assignment Guards & Phase 2 Test Suite (Nov 12, 2026)
+
+- **Conversations / Ticket Comments Module (`src/modules/comments/`):**
+  - Implemented Zod validation schemas (`commentTicketParamSchema`, `createCommentSchema`) enforcing valid ticket UUIDs and trimmed comment payloads.
+  - Built service layer (`addCommentToTicket`, `getCommentsByTicketId`) with resource ownership isolation (`customer` restricted to own tickets; `agent`/`admin` unrestricted) and chronological author joins.
+  - Wired `POST /api/tickets/:id/comments` and `GET /api/tickets/:id/comments` controller handlers and routes.
+- **Ticket Assignment Hardening (`src/modules/tickets/`):**
+  - Added UUID format validation for `assignedAgentId` in `updateTicketSchema`.
+  - Updated `updateTicket` service logic to verify assignee existence (`404 Not Found`) and restrict ticket assignments strictly to `agent` or `admin` roles (`400 Bad Request` for `customer` targets) prior to database updates.
+- **Integration & Failure Test Suite Expansion (`tests/tickets.test.ts`):**
+  - Added 7 integration and failure tests for `/api/tickets/:id/comments` verifying comment creation (`201`), chronological thread retrieval with author details (`200`), cross-customer `403 Forbidden` isolation, whitespace payload `400 Bad Request`, and missing ticket `404 Not Found`.
+  - Added 3 integration tests for `PATCH /api/tickets/:id` assignments covering valid admin/agent assignment (`200`), customer assignee rejection (`400`), and non-existent assignee UUID handling (`404`).
+  - Verified full passing integration test suite (2 suites, 23 tests passed), completing Phase 2 (Core Backend).

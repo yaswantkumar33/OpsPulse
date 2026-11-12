@@ -1,62 +1,60 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "../../db";
+import { ticketComments, tickets, users } from "../../db/schema";
 import { AppErr } from "../../shared/errors/app-error";
-import { createCommentInput } from "./comments.schema";
-import { tickets, ticketComments, users, UserRole } from './../../db/schema';
 
-// type 
-interface CreateCommentParams {
-    ticketId: string;
-    authorId: string;
-    userRole: UserRole;
-    content: string;
+interface AuthUser {
+    userId: string;
+    userRole: "customer" | "agent" | "admin";
 }
-export const createComment = async ({ ticketId, authorId, userRole, content }: CreateCommentParams) => {
 
-    // check if the ticket is existing 
-    const ticketExists = await db.query.tickets.findFirst({
-        where: eq(tickets.id, ticketId)
-    })
-    if (!ticketExists) throw new AppErr("Ticket Not Found!", 404);
+async function verifyTicketAccess(ticketId: string, user: AuthUser) {
+    const [ticket] = await db
+        .select()
+        .from(tickets)
+        .where(eq(tickets.id, ticketId))
+        .limit(1);
 
-    const isOwner = ticketExists.customerId === authorId;
+    if (!ticket) throw new AppErr("Ticket Not Found", 404);
 
-    const isAssignedAgent = ticketExists.assignedAgentId === authorId;
+    if (user.userRole === "customer" && ticket.customerId !== user.userId) throw new AppErr("You do not have premission to access this ticket", 403);
 
-    const isAdmin = userRole === 'admin'
+    return ticket;
+}
 
-    if (!isOwner && !isAssignedAgent && !isAdmin) throw new AppErr("Forbidden: Your not allowed to commnet in this ticket", 403);
+export const addCommentToTicket = async (ticketId: string, content: string, user: AuthUser) => {
 
-    console.log("errors Passed", isAdmin, isAssignedAgent, isOwner)
-
+    await verifyTicketAccess(ticketId, user);
 
     const [newComment] = await db.insert(ticketComments).values({
-        ticketId, authorId, content
+        ticketId,
+        authorId: user.userId,
+        content
     }).returning()
 
     return newComment;
 
 }
 
-export const getComment = async (ticketId: string) => {
+export const getCommentsByTicketId = async (ticketId: string, user: AuthUser) => {
 
-    // check if the ticket is existing 
-    const ticketExists = await db.query.tickets.findFirst({
-        where: eq(tickets.id, ticketId)
-    })
-    if (!ticketExists) throw new AppErr("Ticket Not Found!", 404);
 
-    return await db.query.ticketComments.findMany({
-        where: eq(ticketComments.ticketId, ticketId),
-        with: {
-            author: {
-                columns: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    role: true
-                }
-            }
-        }, orderBy: (comments, { asc }) => [asc(comments.createdAt)]
-    })
+    await verifyTicketAccess(ticketId, user);
+
+    const comments = await db
+        .select({
+            id: ticketComments.id,
+            content: ticketComments.content,
+            createdAt: ticketComments.createdAt,
+            updatedAt: ticketComments.updatedAt,
+            author: { id: users.id, name: users.name, role: users.role },
+        })
+        .from(ticketComments)
+        .innerJoin(users, eq(ticketComments.authorId, users.id))
+        .where(eq(ticketComments.ticketId, ticketId))
+        .orderBy(asc(ticketComments.createdAt));
+
+    return comments;
+
+
 }
